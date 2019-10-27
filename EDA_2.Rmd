@@ -1,0 +1,134 @@
+---
+title: "EDA"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r}
+#categorizing unique ID attribute
+master3$UniqueID <- master3$DivisionNm <- NULL
+```
+
+
+```{r}
+#removing columns
+master3$Population <- master3$Area <- master3$BornOverseas_NS <- master3$FamilyIncome_NS <- master3$HighSchool_NS <- master3$HouseholdIncome_NS <- master3$InternetAccess_NS <- master3$InternetUse_NS <- master3$Language_NS <- master3$PersonalIncome_NS <- master3$Religion_NS <-  master3$Rent_NS <- master3$Tenure_NS <- master3$University_NS <- master3$Volunteer_NS <-  NULL
+```
+
+```{r}
+master3$State <- NULL
+```
+
+
+```{r}
+#combining into born overseas
+#master3$BornOverseas <- master3$Born_Asia + master3$Born_MidEast + master3$Born_SE_Europe + master3$Born_UK + #master3$BornElsewhere
+```
+
+
+```{r}
+#master3$Born_Asia <-  master3$Born_MidEast <-  master3$Born_SE_Europe <-  master3$Born_UK <-  #master3$BornElsewhere <- NULL
+```
+
+
+
+
+```{r}
+library(corrplot)
+J <- cor(master3[, c(1:ncol(master3))], 
+         use = "pairwise.complete.obs")
+corrplot.mixed(J, 
+               lower="ellipse", 
+               upper="number", 
+               tl.pos = "lt",
+               tl.cex = 0.5,
+               tl.col = "black",
+               number.cex= 0.5)
+```
+
+```{r}
+library(ggcorrplot)
+Jclustered <- ggcorrplot(J, hc.order = TRUE, type = "lower")
+Jclustered
+```
+
+```{r}
+master3$Age00_04 <- master3$Age05_14 <- master3$Age15_19 <- master3$Age20_24 <- master3$Age25_34 <- master3$Age35_44 <- master3$Age45_54 <- master3$Age55_64 <- master3$Age65_74 <- master3$Age75_84 <- master3$Age85plus <- NULL
+```
+
+```{r}
+library(corrplot)
+J <- cor(master3[, c(1:ncol(master3))], 
+         use = "pairwise.complete.obs")
+corrplot.mixed(J, 
+               lower="shade", 
+               upper="number", 
+               tl.pos = "lt",
+               tl.cex = 0.5,
+               tl.col = "black",
+               number.cex= 0.5)
+```
+
+
+
+```{r}
+#creating class
+library(dplyr)
+library(Hmisc)
+
+master3$Class <- ifelse(master3$LNP_Percent >=50, 1, 0)
+```
+
+
+
+```{r}
+library(plyr)
+count(master3, "Class")
+```
+```{r}
+library(xlsx)
+write.xlsx(master3, 'C:/Users/asharafi/Documents/Thesis/master4.xlsx' )
+```
+
+```{r}
+ideal2 <- class.ind(master3$Class)
+```
+
+
+
+```{r}
+#scaling data
+require(Scale)
+scaledmaster3 <- scale(master3)
+```
+
+```{r}
+write.xlsx(scaledmaster3, 'C:/Users/asharafi/Documents/Thesis/scaledmaster2.xlsx' )
+```
+
+
+```{r}
+str(scaledmaster2)
+```
+
+```{r}
+str(components3)
+```
+
+```{r}
+components$Class <- as.numeric(as.character(components$Class))
+```
+
+
+```{r}
+require(plyr)
+func <- function(components3)
+{
+return(data.frame(COR = cor(components3$Class, components3$Dim.1)))
+}
+
+ddply(components3, .(group), func)
+```
+

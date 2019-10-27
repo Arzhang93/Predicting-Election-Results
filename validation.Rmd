@@ -1,0 +1,117 @@
+---
+title: "Model Validation"
+output: html_notebook
+---
+
+```{r}
+#SVM
+valt1 = components3[1:301,] 
+valt2 = components3[452:1051,]
+valtrain = rbind(valt1, valt2)
+valtest = components3[302:451,]
+knn_target4 <- valtrain$Class
+```
+
+```{r}
+svmvalpred <- predict(svm_best, valtest[,-10])
+```
+
+
+```{r}
+svmpredbest <- table(svmvalpred, valtest$Class)
+svmpredbest
+```
+```{r}
+accuracy2(svmpredbest)
+```
+
+
+```{r}
+#KNN
+knn_tuned4 <- knn(valtrain, valtest, cl=knn_target4, k=1)
+test_target4 <- valtest$Class
+knntab <- table(knn_tuned4,test_target4)
+knntab 
+```
+```{r}
+accuracy2(knntab)
+```
+
+```{r}
+#Logit
+Logit3 <- glm(Class ~., data=valtrain, family = binomial(link = "logit"))
+```
+
+
+```{r}
+valtest$predicted.risk <- predict(Logit3, newdata=valtest, type="response")
+```
+
+```{r}
+valtb <- table(test_target4, as.numeric(valtest$predicted.risk >= 0.72))
+valtb
+```
+```{r}
+accuracy2(valtb)
+```
+
+
+
+```{r}
+#Probit
+Probit3 <- glm(Class ~., data=valtrain, family = binomial(link = "probit"))
+```
+
+```{r}
+valtest$predicted.risk2 <- predict(Probit3, newdata=valtest, type="response")
+```
+
+```{r}
+valtb2 <- table(test_target4, as.numeric(valtest$predicted.risk2 >= 0.7))
+valtb2
+```
+```{r}
+accuracy2(valtb2)
+```
+
+
+```{r}
+#ANN
+valtest2 <-  scaledmaster2[302:451,]
+```
+
+```{r}
+myvars2 <- names(valtest2) %in% c("Class")
+val_test <- valtest2[!myvars2]
+head(val_test)
+```
+```{r}
+nn2.results2 <- neuralnet::compute(nn2, val_test)
+results3 <- data.frame(actual = valtest2$Class, prediction = nn2.results2$net.result)
+```
+
+```{r}
+results3
+```
+```{r}
+NNpred3 <- ifelse(results3>0.5, 1, 0)
+NNpred3
+```
+```{r}
+roundedresults2<-sapply(results3,round,digits=0)
+roundedresultsdf2=data.frame(roundedresults2)
+attach(roundedresultsdf2)
+NNpred3 <- table(actual,prediction)
+table(actual,prediction)
+```
+
+```{r}
+require(caret)
+accuracy2(NNpred3)
+sensitivity(NNpred3)
+specificity(NNpred3)
+posPredValue(NNpred3)
+```
+
+
+

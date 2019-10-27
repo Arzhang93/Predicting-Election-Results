@@ -1,0 +1,101 @@
+---
+title: "Pre-Processing"
+output: html_notebook
+---
+
+
+```{r}
+library(eechidna)
+library(tidyverse)
+library(purrr)
+library(knitr)
+library(broom)
+library(purrrlyr)
+```
+```{r}
+#calling data
+data("abs2016")
+data("abs2013")
+data("abs2010")
+data("abs2007")
+data("abs2004")
+data("abs2001")
+```
+
+```{r}
+#joining ABS and AEC data
+data16 <- left_join(tpp16 %>% select(LNP_Percent, ALP_Percent, UniqueID), abs2016, by="UniqueID")
+data13 <- left_join(tpp13 %>% select(LNP_Percent, ALP_Percent, UniqueID), abs2013, by="UniqueID")
+data10 <- left_join(tpp10 %>% select(LNP_Percent, ALP_Percent, UniqueID), abs2010, by="UniqueID")
+data07 <- left_join(tpp07 %>% select(LNP_Percent, ALP_Percent, UniqueID), abs2007, by="UniqueID")
+data04 <- left_join(tpp04 %>% select(LNP_Percent, ALP_Percent, UniqueID), abs2004, by="UniqueID")
+data01 <- left_join(tpp01 %>% select(LNP_Percent, ALP_Percent, UniqueID), abs2001, by="UniqueID")
+```
+
+```{r}
+#imputing 2019 data
+sF16 <- load_shapefile("C:/Users/asharafi/Documents/Thesis/Shapefiles/CED_2016_AUST.mif")
+sF19 <- load_shapefile("C:/Users/asharafi/Documents/Thesis/Shapefiles/COM_ELB.TAB")
+```
+```{r}
+#2019 spacial dataframe
+mapping_2019 <- mapping_fn(aec_sF = sF19, abs_sF = sF16)
+```
+
+```{r}
+imputed_data_2019 <- weighted_avg_census(mapping_df = mapping_2019, abs_df = abs2016)
+```
+```{r}
+library(xlsx)
+write.xlsx(imputed_data_2019, 'C:/Users/asharafi/Documents/Thesis/Imputed19.xlsx' )
+```
+```{r}
+#creating data19
+data19 <- left_join(tpp19 %>% select(LNP_Percent, ALP_Percent, UniqueID), Imputed19, by="UniqueID")
+```
+
+```{r}
+data01$Year = 1
+data04$Year = 2
+data07$Year = 3
+data10$Year = 4
+data13$Year = 5
+data16$Year = 6
+data19$Year = 7
+```
+
+
+```{r}
+#creating the master spreadsheet
+library(bindr)
+master3 <- bind_rows(data01, data04, data07, data10, data13, data16, data19)
+```
+```{r}
+library(xlsx)
+write.xlsx(master3, 'C:/Users/asharafi/Documents/Thesis/master3.xlsx' )
+```
+
+```{r}
+#converting to numeric
+#master$scode[master$State=="NSW"] <- 1
+
+```
+
+
+```{r}
+summary(master)
+describe(master)
+```
+
+
+
+```{r}
+#Scaling finance attributes
+master$MedianFamilyIncome <- master$MedianFamilyIncome/100
+master$MedianHouseholdIncome <- master$MedianHouseholdIncome/100
+master$MedianLoanPay <- master$MedianLoanPay/100
+master$MedianPersonalIncome <- master$MedianPersonalIncome/10
+master$MedianRent <- master$MedianRent/10
+```
+
+

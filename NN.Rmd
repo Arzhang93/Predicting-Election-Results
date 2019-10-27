@@ -1,0 +1,176 @@
+---
+title: "Neural Network"
+output: html_notebook
+---
+
+```{r}
+require(neuralnet)
+library(nnet)
+library(eechidna)
+library(tidyverse)
+library(purrr)
+library(knitr)
+library(broom)
+library(purrrlyr)
+```
+
+
+
+```{r}
+NNtrain2 <-  scaledmaster2[1:901,] 
+NNtest2 <-  scaledmaster2[902:1051,]
+```
+```{r}
+str(NNtrain2)
+```
+
+
+```{r}
+nn2 <- neuralnet(Class ~., data = NNtrain2, hidden=3, act.fct = 'logistic', linear.output = FALSE)
+```
+
+```{r}
+plot(nn2)
+```
+```{r}
+nn2$result.matrix
+```
+
+```{r}
+#excluding class variable
+myvars <- names(NNtest2) %in% c("Class")
+temp_test <- NNtest2[!myvars]
+head(temp_test)
+```
+```{r}
+nn2.results <- neuralnet::compute(nn2, temp_test)
+results2 <- data.frame(actual = NNtest2$Class, prediction = nn2.results$net.result)
+```
+
+```{r}
+results2
+```
+
+
+```{r}
+NNpred2 <- ifelse(results2>0.5, 1, 0)
+NNpred2
+```
+
+```{r}
+roundedresults<-sapply(results2,round,digits=0)
+roundedresultsdf=data.frame(roundedresults)
+attach(roundedresultsdf)
+NNpred2 <- table(actual,prediction)
+table(actual,prediction)
+```
+
+```{r}
+require(caret)
+accuracy2(NNpred2)
+sensitivity(NNpred2)
+specificity(NNpred2)
+posPredValue(NNpred2)
+```
+```{r}
+require(openxlsx)
+write.xlsx(results2, 'C:/Users/asharafi/Documents/Thesis/NN.xlsx' )
+```
+
+
+```{r}
+nntuned2 <- neuralnet(Class ~., data = NNtrain2, hidden=3, rep=10, act.fct = 'logistic', linear.output = FALSE)
+```
+
+```{r}
+plot(nntuned2, rep="best")
+```
+```{r}
+tuned_test <- NNtest[!myvars]
+head(tuned_test)
+```
+```{r}
+nntuned.results <- neuralnet::compute(nntuned, tuned_test)
+resultstuned <- data.frame(actual = NNtest$Class, prediction = nntuned.results$net.result)
+resultstuned
+```
+
+```{r}
+tunedresults<-sapply(resultstuned,round,digits=0)
+tunedresultsdf=data.frame(tunedresults)
+attach(tunedresultsdf)
+NNtunedpred <- table(actual,prediction)
+table(actual,prediction)
+```
+```{r}
+accuracy2(NNtunedpred)
+```
+```{r}
+roc_NN <- rocit(score = resultstuned$prediction, class = resultstuned$actual, method="emp")
+summary(roc_NN)
+```
+```{r}
+plot(roc_NN, values = F)
+```
+```{r}
+#ANN plot
+plot(nn.results$net.result, resultstuned$actual, col='red', main='Real vs ANN Estimate', xlab='LNP Percentage', ylab='Predicted Percentage', pch=18,cex=0.7)
+abline(0,1, lwd=2)
+```
+
+```{r}
+nn_rprop_multi <- neuralnet(Class ~., data = NNtrain2,
+                         algorithm = "backprop",
+                         hidden=c(2),
+                         threshold=0.5,
+                         stepmax = 1e+06,
+                         learningrate = 0.0001,
+                         rep = 5)
+```
+```{r,fig.width = 20}
+plot(nn_rprop_multi, rep="best")
+```
+```{r}
+tuned_test3 <- NNtest2[!myvars]
+head(tuned_test3)
+```
+
+```{r}
+nntuned.results2 <- neuralnet::compute(nn_rprop_multi, tuned_test3)
+resultstuned2 <- data.frame(actual = NNtest2$Class, prediction = nntuned.results2$net.result)
+```
+
+
+
+```{r}
+tunedresults2<-sapply(resultstuned2,round,digits=0)
+tunedresultsdf=data.frame(tunedresults2)
+```
+
+```{r}
+attach(tunedresultsdf)
+NNpred3 <- table(actual,prediction)
+table(actual,prediction)
+```
+
+```{r}
+accuracy2(NNpred3)
+sensitivity(NNpred3)
+specificity(NNpred3)
+posPredValue(NNpred3)
+```
+
+
+```{r}
+library(ROCit)
+roc_NNpred3 <- rocit(score = resultstuned2$prediction, class = resultstuned2$actual, method="emp")
+summary(roc_NNpred3)
+```
+```{r}
+plot(roc_NNpred3, values = F)
+```
+```{r}
+require(openxlsx)
+write.xlsx(tunedresultsdf, 'C:/Users/asharafi/Documents/Thesis/NN.xlsx' )
+```
+

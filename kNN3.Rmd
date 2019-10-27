@@ -1,0 +1,82 @@
+---
+title: "kNN2"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(class)
+```
+
+```{r}
+knn_target3 <- train3$Class
+test_target3 <- test3$Class
+```
+
+```{r}
+knnpred3 <- knn(train3, test3, cl=knn_target3, k=20)
+```
+
+```{r}
+tb3 <- table(knnpred3,test_target3)
+tb3
+```
+
+```{r}
+accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
+accuracy(tb3)
+```
+
+```{r}
+#Improving model performance
+i=1                          # declaration to initiate for loop
+k.optm=1                     # declaration to initiate for loop
+for (i in 1:30){ 
+    knn.mod <-  knn(train=train3, test=test3, cl=knn_target3, k=i)
+    k.optm[i] <- 100 * sum(knn_target3 == knn.mod)/NROW(knn_target3)
+    k=i  
+    cat(k,'=',k.optm[i],'\n')       # to print % accuracy 
+}
+```
+
+```{r}
+plot(k.optm, type="b", xlab="K- Value",ylab="Accuracy level") 
+```
+```{r}
+knn_tuned2 <- knn(train3, test3, cl=knn_target3, k=1)
+knn_tuned2
+```
+```{r}
+tb4 <- table(knn_tuned2,test_target3)
+tb4
+```
+```{r}
+accuracy(tb4)
+sensitivity(tb4)
+specificity(tb4)
+posPredValue(tb4)
+```
+
+```{r}
+#plot
+prob2 <- attr(knn_tuned2, "prob")
+```
+
+```{r}
+require(openxlsx)
+write.xlsx(knn_tuned2, 'C:/Users/asharafi/Documents/Thesis/knn2.xlsx' )
+```
+
+
+```{r}
+library(ROCR)
+library(pROC)
+library(ROCit)
+library(caret)
+roc_knn <- rocit(score = pred6, class = testglm$Class, method="emp")
+summary(roc_knn)
+```
+```{r}
+plot(roc_knn)
+```
+

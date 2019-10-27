@@ -1,0 +1,114 @@
+---
+title: "SVM2"
+output: html_notebook
+---
+
+```{r}
+components3$Class <- factor(components3$Class)
+```
+
+```{r}
+train3 = components3[1:901,] 
+test3 = components3[902:1051,]
+```
+
+```{r}
+library(e1071)
+svm_model3 <- svm(Class ~ ., data=train3, cost=100, gamma=1)
+summary(svm_model3)
+```
+
+```{r}
+pred3 <- predict(svm_model3, test3[,-10])
+```
+```{r}
+svmpred2 <- table(pred3, test3$Class)
+svmpred2
+```
+```{r}
+accuracy2(svmpred2)
+```
+
+```{r}
+svm_tune2 <- tune(svm, Class ~ ., data = train3, kernel="radial", ranges=list(cost=1*10^(-3:3), gamma=2^(-2:2)))
+```
+
+
+
+```{r}
+summary(svm_tune2)
+```
+```{r}
+dat <- data.frame(x=X, y=Y)
+plot(svm_tune2, dat)
+```
+
+
+
+```{r}
+svm_best <- svm(Class ~ ., data=train3, cost=10, gamma=0.25)
+```
+
+```{r}
+pred4 <- predict(svm_best, test3[,-10])
+```
+```{r}
+svmpredbest <- table(pred4, test3$Class)
+svmpredbest
+```
+```{r}
+accuracy2(svmpredbest)
+sensitivity(svmpredbest)
+specificity(svmpredbest)
+posPredValue(svmpredbest)
+```
+
+
+```{r}
+require(openxlsx)
+write.xlsx(pred4, 'C:/Users/asharafi/Documents/Thesis/SVM3.xlsx' )
+```
+
+```{r}
+library(ROCR)
+library(pROC)
+library(ROCit)
+library(caret)
+```
+```{r}
+train_control <- trainControl(method="cv", number=10)
+```
+
+```{r}
+svmcv <- svm(Class ~ ., data=train2, cost=1, gamma=0.5, trControl=train_control, method="nb")
+print(svmcv)
+```
+```{r}
+pred4 <- predict(svmcv, test2[,-10])
+```
+
+
+```{r}
+svmcvbest <- table(pred4, test2$Class)
+svmcvbest
+```
+```{r}
+accuracy(svmcvbest)
+```
+
+```{r}
+str(test2)
+```
+
+```{r}
+pred5 <- as.numeric(pred4)
+```
+
+```{r}
+roc_svm <- rocit(score = pred5, class = testglm2$Class, method="emp")
+summary(roc_svm)
+```
+```{r}
+plot(roc_svm, values = F)
+```
+

@@ -1,0 +1,85 @@
+---
+title: "PCA3"
+output: html_notebook
+---
+
+
+
+
+```{r}
+require(gridExtra)
+require(grid)
+library(GPArotation)
+library(psych)
+fit.3 <- fa(scaledmaster2, factors=9, rotation="verimax")
+print(fit.3)
+```
+```{r}
+library(nFactors)
+ev2 <- eigen(cor(scaledmaster2))
+ap2 <- parallel(subject=nrow(scaledmaster2), var=ncol(scaledmaster2),
+               rep=100, cent=.05)
+nS2 <- nScree(x=ev2$values, aparallel=ap2$eigen$qevpea)
+plotnScree(nS2)
+```
+```{r}
+library(FactoMineR)
+PCA2 <- PCA(scaledmaster2, ncp = 9)
+```
+
+
+
+```{r}
+eigenvalues2 <- PCA2$eig
+eigenvalues2
+```
+
+
+```{r}
+components2 <- PCA2$ind$coord
+head(components2)
+```
+
+```{r}
+head(PCA2$var$cos2)
+```
+```{r} 
+library("corrplot")
+corrplot(PCA2$var$cos2, is.corr=FALSE)
+```
+
+
+
+```{r}
+library(xlsx)
+write.xlsx(components2, 'C:/Users/asharafi/Documents/Thesis/components3.xlsx' )
+```
+
+
+```{r}
+head(PCA2$var$contrib)
+```
+
+```{r}
+plot(PCA2, choix = "var")
+```
+
+```{r}
+res.desc <- dimdesc(PCA2, axes= c(1,2))
+res.desc$Dim.2
+```
+
+```{r}
+library(corrplot)
+Z <- cor(components3[, c(1:ncol(components3))], 
+         use = "pairwise.complete.obs")
+corrplot.mixed(Z, 
+               lower="ellipse", 
+               upper="number", 
+               tl.pos = "lt",
+               tl.cex = 0.5,
+               tl.col = "black",
+               number.cex= 0.5)
+```
+
+

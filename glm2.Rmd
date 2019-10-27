@@ -1,0 +1,129 @@
+---
+title: "glm2"
+output: html_notebook
+---
+```{r}
+library(ROCR)
+library(pROC)
+library(caret)
+library(MASS)
+require(aod)
+require(survey)
+require(lmtest)
+library(ROCit)
+```
+
+```{r}
+trainglm2 <- train3
+testglm2 <- test3
+```
+
+
+```{r}
+Logit2 <- glm(Class ~., data=trainglm2, family = binomial(link = "logit"))
+summary(Logit2)
+step <- stepAIC(Logit2, direction="both")
+```
+
+```{r}
+Probit2 <- glm(Class ~., data=trainglm2, family = binomial(link = "probit"))
+summary(Probit2)
+```
+```{r}
+plot(Logit2)
+```
+```{r}
+plot(Probit2)
+```
+```{r}
+testglm2$predicted.risk <- predict(Logit2, newdata=testglm2, type="response")
+```
+
+```{r}
+tb5 <- table(testglm2$Class, as.numeric(testglm2$predicted.risk >= 0.51))
+tb5
+```
+```{r}
+accuracy(tb5)
+sensitivity(tb5)
+specificity(tb5)
+posPredValue(tb5)
+```
+
+
+
+```{r}
+roc_Logit <- rocit(score = testglm2$predicted.risk, class = testglm2$Class, method="emp")
+```
+
+```{r}
+summary(roc_Logit)
+```
+```{r}
+plot(roc_Logit, values = F)
+```
+```{r}
+testglm2$predicted.risk2 <- predict(Probit2, newdata=testglm2, type="response")
+```
+
+```{r}
+tb6 <- table(testglm2$Class, as.numeric(testglm2$predicted.risk2 >= 0.53))
+tb6
+```
+```{r}
+accuracy(tb6)
+sensitivity(tb6)
+specificity(tb6)
+posPredValue(tb6)
+```
+
+```{r}
+mae <- function(error)
+{
+	mean(abs(error))
+}
+
+```
+
+```{r}
+mae(tb5)
+mae(tb6)
+```
+
+
+```{r}
+require(openxlsx)
+write.xlsx(testglm2, 'C:/Users/asharafi/Documents/Thesis/glm.xlsx' )
+```
+
+
+```{r}
+roc_Probit <- rocit(score = testglm2$predicted.risk2, class = testglm2$Class, method="emp")
+```
+
+```{r}
+summary(roc_Probit)
+```
+```{r}
+plot(roc_Probit, values = F)
+```
+```{r}
+#likelihood
+percentage <- master3[902:1051,]
+percentage <- percentage$LNP_Percent
+percentage <- percentage/ 100
+```
+
+
+
+```{r}
+#Logit plot
+plot(percentage, testglm2$predicted.risk, col='red', main='Real vs Logit Estimate', xlab='LNP Percentage', ylab='Predicted Percentage', pch=18,cex=0.7)
+abline(0,1, lwd=2)
+```
+```{r}
+#Probit plot
+plot(percentage, testglm2$predicted.risk2, col='blue', main='Real vs Probit Estimate', xlab='LNP Percentage', ylab='Predicted Percentage', pch=18,cex=0.7)
+abline(0,1, lwd=2)
+```
+
